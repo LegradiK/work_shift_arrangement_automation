@@ -1,0 +1,8 @@
+<h3 class="popup-title">{{ shift.get_shift_type_display }} &mdash; {{ shift.date }}</h3>
+<ul class="popup-staff-list">
+  {% for member in shift.staff.all %}
+    <li>{{ member.name }}</li>
+  {% empty %}
+    <li class="empty">No staff assigned.</li>
+  {% endfor %}
+</ul>

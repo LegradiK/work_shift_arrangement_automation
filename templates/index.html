@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+  <p class="sidebar-label">Staff</p>
+  <ul class="staff-list">
+    {% for member in staff %}
+      <li>{{ member.name }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+
+{% block main %}
+  <div id="calendar"></div>
+
+  <div id="staff-popup" class="staff-popup hidden">
+    <div class="staff-popup-inner">
+      <button class="popup-close" onclick="closePopup()">&#x2715;</button>
+      <div id="staff-popup-content"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let activeFilter = null;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+      initialView: 'dayGridMonth',
+      eventOrder: 'order',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'morningBtn afternoonBtn nightBtn',
+      },
+      customButtons: {
+        morningBtn:   { text: ' ', click: () => filterShifts('morning') },
+        afternoonBtn: { text: ' ', click: () => filterShifts('afternoon') },
+        nightBtn:     { text: ' ', click: () => filterShifts('night') },
+      },
+      events: function (info, success, failure) {
+        let url = '/events/';
+        if (activeFilter) url += '?shift_type=' + activeFilter;
+        fetch(url).then(r => r.json()).then(success).catch(failure);
+      },
+      eventClick: function (info) {
+        htmx.ajax('GET', '/shifts/' + info.event.id + '/staff/', {
+          target: '#staff-popup-content',
+          swap: 'innerHTML',
+        });
+        document.getElementById('staff-popup').classList.remove('hidden');
+      },
+    });
+
+    calendar.render();
+    window._calendar = calendar;
+
+    const shiftLabels = {
+      'fc-morningBtn-button':   ['Morning',   '06:00–14:00'],
+      'fc-afternoonBtn-button': ['Afternoon', '14:00–22:00'],
+      'fc-nightBtn-button':     ['Night',     '22:00–06:00'],
+    };
+    Object.entries(shiftLabels).forEach(([cls, [name, time]]) => {
+      const btn = document.querySelector('.' + cls);
+      if (btn) btn.innerHTML = `<span class="btn-name">${name}</span><span class="btn-time">${time}</span>`;
+    });
+  });
+
+  function filterShifts(type) {
+    activeFilter = activeFilter === type ? null : type;
+    document.querySelectorAll('.fc-morningBtn-button, .fc-afternoonBtn-button, .fc-nightBtn-button')
+      .forEach(btn => btn.classList.remove('fc-btn-active'));
+    if (activeFilter) {
+      document.querySelector('.fc-' + activeFilter + 'Btn-button').classList.add('fc-btn-active');
+    }
+    window._calendar.refetchEvents();
+  }
+
+  function closePopup() {
+    document.getElementById('staff-popup').classList.add('hidden');
+  }
+
+  document.getElementById('staff-popup').addEventListener('click', function (e) {
+    if (e.target === this) closePopup();
+  });
+</script>
+{% endblock %}

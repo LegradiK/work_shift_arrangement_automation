@@ -1,0 +1,229 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: 'Nunito', sans-serif;
+  background: #FDF6EE;
+}
+
+header {
+  background: linear-gradient(135deg, #4A2C17, #7B4F3A);
+  color: #F5E6D3;
+  padding: 1rem 1.5rem;
+}
+
+header h1 {
+  font-size: 2rem;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: #FDF6EE;
+}
+
+.sidebar {
+  width: 220px;
+  background: #F5E6D3;
+  border-right: 2px solid #C4956A;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.sidebar-label {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7B4F3A;
+  margin-bottom: 0.6rem;
+}
+
+.staff-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.staff-list li {
+  font-size: 0.88rem;
+  color: #4A2C17;
+  padding: 0.3rem 0.5rem;
+  border-radius: 5px;
+}
+
+.staff-list li:hover {
+  background: #EDD5BB;
+}
+
+.main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+#calendar {
+  height: 100%;
+}
+
+footer {
+  background: linear-gradient(135deg, #4A2C17, #7B4F3A);
+  color: #D4A97A;
+  text-align: center;
+  padding: 0.6rem;
+  font-size: 0.8rem;
+}
+
+footer a {
+  color: #F5E6D3;
+  font-weight: 600;
+}
+
+/* FullCalendar coffee theme */
+:root {
+  --fc-button-bg-color: #7B4F3A;
+  --fc-button-border-color: #4A2C17;
+  --fc-button-hover-bg-color: #5C3317;
+  --fc-button-hover-border-color: #4A2C17;
+  --fc-button-active-bg-color: #4A2C17;
+  --fc-button-active-border-color: #3E1F00;
+  --fc-button-text-color: #F5E6D3;
+  --fc-today-bg-color: rgba(196, 149, 106, 0.2);
+  --fc-border-color: #D4B89A;
+  --fc-daygrid-event-dot-width: 8px;
+}
+
+.fc .fc-button {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  border-radius: 6px;
+  width: 10rem;
+}
+
+.fc .fc-button:focus {
+  box-shadow: 0 0 0 3px rgba(123, 79, 58, 0.35);
+}
+
+.fc-morningBtn-button,
+.fc-afternoonBtn-button,
+.fc-nightBtn-button {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  line-height: 1.2 !important;
+  padding: 0.3rem 0.75rem !important;
+  opacity: 0.72;
+  margin-left: 0.35rem !important;
+}
+
+.fc-morningBtn-button {
+  background: #C8922A !important;
+  border-color: #A87220 !important;
+}
+
+.fc-afternoonBtn-button {
+  background: #7B4F3A !important;
+  border-color: #5C3317 !important;
+}
+
+.fc-nightBtn-button {
+  background: #3E2314 !important;
+  border-color: #2A1509 !important;
+}
+
+.fc-morningBtn-button.fc-btn-active,
+.fc-afternoonBtn-button.fc-btn-active,
+.fc-nightBtn-button.fc-btn-active {
+  opacity: 1;
+  outline: 2px solid #F5E6D3;
+  outline-offset: 2px;
+}
+
+.btn-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: block;
+}
+
+.btn-time {
+  font-size: 0.68rem;
+  opacity: 0.88;
+  display: block;
+}
+
+
+
+/* Staff popup */
+.staff-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(62, 35, 20, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.staff-popup.hidden {
+  display: none;
+}
+
+.staff-popup-inner {
+  background: #FDF6EE;
+  border: 2px solid #C4956A;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  min-width: 260px;
+  max-width: 360px;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(62, 35, 20, 0.25);
+}
+
+.popup-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #7B4F3A;
+  cursor: pointer;
+}
+
+.popup-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4A2C17;
+  margin-bottom: 0.75rem;
+}
+
+.popup-staff-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.popup-staff-list li {
+  padding: 0.35rem 0.6rem;
+  background: #F5E6D3;
+  border-radius: 6px;
+  color: #4A2C17;
+  font-size: 0.9rem;
+}
+
+.popup-staff-list li.empty {
+  color: #9A7055;
+  background: none;
+  font-style: italic;
+}
