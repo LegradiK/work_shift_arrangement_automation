@@ -3,7 +3,7 @@
   <p class="sidebar-label">Staff</p>
   <ul class="staff-list">
     {% for member in staff %}
-      <li>{{ member.name }}</li>
+      <li data-staff-id="{{ member.id }}">{{ member.name }}</li>
     {% endfor %}
   </ul>
 {% endblock %}
@@ -19,6 +19,7 @@
 {% block scripts %}
 <script>
 let activeFilter = null;
+let activeStaff = null;
 
 document.addEventListener('DOMContentLoaded', function () {
   const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
@@ -36,6 +37,9 @@ document.addEventListener('DOMContentLoaded', function () {
       nightBtn:     { text: ' ', click: () => filterShifts('night') },
     },
     eventContent: function(info) {
+      const summary = info.event.extendedProps.summary;
+      if (summary) return false;
+
       const understaffed = info.event.extendedProps.understaffed;
       return {
         html: `<div class="custom-event">
@@ -49,6 +53,25 @@ document.addEventListener('DOMContentLoaded', function () {
       };
     },
     eventDidMount: function(info) {
+      const summary = info.event.extendedProps.summary;
+
+      if (summary) {
+        info.el.style.cssText = 'display: none;';
+
+        const dateStr = info.event.startStr;
+        const dayCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+        if (dayCell) {
+          const existingLabel = dayCell.querySelector(`.summary-${summary}`);
+          if (!existingLabel) {
+            const label = document.createElement('span');
+            label.className = `summary-${summary}`;
+            label.textContent = `${summary === 'weekly' ? 'Week: ' : 'Month: '}: ${info.event.extendedProps.hours}h`;
+            const top = dayCell.querySelector('.fc-daygrid-day-top');
+            if (top) top.appendChild(label);
+          }
+        }
+        return;
+      }
       const harness = info.el.closest('.fc-daygrid-event-harness');
       if (harness) {
         harness.style.cssText = 'flex: 1; display: flex; margin-bottom: 0; margin-top: 0;';
@@ -80,15 +103,36 @@ document.addEventListener('DOMContentLoaded', function () {
         left.style.cssText = 'display: flex; align-items: center; flex-shrink: 0; width: 0.85rem; height: 0.85rem;';
       }
     },
+    eventWillUnmount: function(info) {  
+      const summary = info.event.extendedProps.summary;
+      if (summary) {
+        const dateStr = info.event.startStr;
+        const dayCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+        if (dayCell) {
+          const label = dayCell.querySelector(`.summary-${summary}`);
+          if (label) label.remove();
+        }
+      }
+    },
     datesSet: function() {
       document.querySelectorAll('.fc-daygrid-day-events').forEach(el => {
         el.style.cssText = 'display: flex; flex-direction: column; height: 100%; padding: 2px; box-sizing: border-box; gap: 2px;';
       });
     },
     events: function(info, success, failure) {
-      let url = `/events/?start=${info.startStr}&end=${info.endStr}`;
+      const start = info.startStr;
+      // extend end by 7 days to catch Saturdays and month-end days
+      const endDate = new Date(info.end);
+      endDate.setDate(endDate.getDate() + 7);
+      const end = endDate.toISOString().split('T')[0];
+
+      let url = `/events/?start=${start}&end=${end}`;
       if (activeFilter) url += '&shift_type=' + activeFilter;
-      fetch(url).then(r => r.json()).then(success).catch(failure);
+      if (activeStaff) url += '&staff_id=' + activeStaff;
+      fetch(url)
+        .then(r => r.json())
+        .then(success)
+        .catch(failure);
     },
     eventClick: function(info) {
       htmx.ajax('GET', '/shifts/' + info.event.id + '/staff/', {
@@ -101,6 +145,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
   calendar.render();
   window._calendar = calendar;
+
+  document.querySelectorAll('.staff-list li').forEach(li => {
+    li.addEventListener('click', function() {
+      const staffId = this.dataset.staffId;
+      if (activeStaff === staffId) {
+        activeStaff = null;
+        this.classList.remove('active');
+        this.style.removeProperty('background');
+        this.style.removeProperty('color');
+      } else {
+        document.querySelectorAll('.staff-list li').forEach(el => {
+          el.classList.remove('active');
+          el.style.removeProperty('background');
+          el.style.removeProperty('color');
+        });
+        activeStaff = staffId;
+        this.classList.add('active');
+        this.style.background = '#7B4F3A';
+        this.style.color = '#FDF6EE';
+      }
+      window._calendar.refetchEvents();
+    });
+  });
 
   const shiftLabels = {
     'fc-morningBtn-button':   ['Morning',   '06:00–14:00'],
