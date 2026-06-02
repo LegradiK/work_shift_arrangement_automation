@@ -89,7 +89,7 @@ footer a {
   font-weight: 600;
 }
 
-/* FullCalendar coffee theme */
+/* FullCalendar theme variables */
 :root {
   --fc-button-bg-color: #7B4F3A;
   --fc-button-border-color: #4A2C17;
@@ -100,7 +100,7 @@ footer a {
   --fc-button-text-color: #F5E6D3;
   --fc-today-bg-color: rgba(196, 149, 106, 0.2);
   --fc-border-color: #D4B89A;
-  --fc-daygrid-event-dot-width: 8px;
+  --fc-event-text-color: #3a3a3a;
 }
 
 .fc .fc-button {
@@ -114,6 +114,68 @@ footer a {
   box-shadow: 0 0 0 3px rgba(123, 79, 58, 0.35);
 }
 
+/* Day cell height trick */
+.fc .fc-daygrid-day,
+.fc td.fc-daygrid-day {
+  height: 1px;
+}
+
+.fc .fc-daygrid-day-frame {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: unset !important;
+}
+
+.fc .fc-daygrid-day-events {
+  flex: 1 !important;
+  min-height: unset !important;
+}
+
+.fc .fc-daygrid-day-bottom {
+  display: none !important;
+}
+
+.fc .fc-daygrid-day-bg {
+  display: none !important;
+}
+
+/* Custom event layout */
+.custom-event {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  padding: 2px 4px;
+}
+
+.custom-event-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 0.85rem;
+  height: 0.85rem;
+  overflow: hidden;
+}
+
+.event-warning-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.custom-event-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.event-count {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #3a3a3a;
+}
+
+/* Shift filter buttons */
 .fc-morningBtn-button,
 .fc-afternoonBtn-button,
 .fc-nightBtn-button {
@@ -132,98 +194,4 @@ footer a {
 }
 
 .fc-afternoonBtn-button {
-  background: #7B4F3A !important;
-  border-color: #5C3317 !important;
-}
-
-.fc-nightBtn-button {
-  background: #3E2314 !important;
-  border-color: #2A1509 !important;
-}
-
-.fc-morningBtn-button.fc-btn-active,
-.fc-afternoonBtn-button.fc-btn-active,
-.fc-nightBtn-button.fc-btn-active {
-  opacity: 1;
-  outline: 2px solid #F5E6D3;
-  outline-offset: 2px;
-}
-
-.btn-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  display: block;
-}
-
-.btn-time {
-  font-size: 0.68rem;
-  opacity: 0.88;
-  display: block;
-}
-
-
-
-/* Staff popup */
-.staff-popup {
-  position: fixed;
-  inset: 0;
-  background: rgba(62, 35, 20, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.staff-popup.hidden {
-  display: none;
-}
-
-.staff-popup-inner {
-  background: #FDF6EE;
-  border: 2px solid #C4956A;
-  border-radius: 12px;
-  padding: 1.5rem 2rem;
-  min-width: 260px;
-  max-width: 360px;
-  position: relative;
-  box-shadow: 0 8px 24px rgba(62, 35, 20, 0.25);
-}
-
-.popup-close {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.8rem;
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: #7B4F3A;
-  cursor: pointer;
-}
-
-.popup-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #4A2C17;
-  margin-bottom: 0.75rem;
-}
-
-.popup-staff-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.popup-staff-list li {
-  padding: 0.35rem 0.6rem;
-  background: #F5E6D3;
-  border-radius: 6px;
-  color: #4A2C17;
-  font-size: 0.9rem;
-}
-
-.popup-staff-list li.empty {
-  color: #9A7055;
-  background: none;
-  font-style: italic;
-}
+  background: #7B4F
