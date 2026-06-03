@@ -62,7 +62,6 @@ Create a `data.env` file in the project root:
 ```env
 SECRET_KEY=your-secret-key-here
 DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
 ```
 
 > `data.env` is listed in `.gitignore` and should never be committed.
