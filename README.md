@@ -55,6 +55,30 @@ A Django-based web application for organising and visualising staff work shifts 
 
 ---
 
+## Setup & Running
+
+```bash
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Apply migrations
+python manage.py migrate
+
+# Generate 6 months of shifts
+python manage.py generate_shifts
+
+# Run the development server
+python manage.py runserver
+```
+
+> To access admin features, create a superuser: `python manage.py createsuperuser`
+
+---
+
 ## Tech Stack
 
 - **Backend:** Django 6
