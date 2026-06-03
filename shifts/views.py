@@ -36,12 +36,18 @@ SHIFT_HOURS = {
 }
 
 def index(request):
-    staff = Staff.objects.order_by('name')
-    return render(request, 'index.html', {'staff': staff})
+    return render(request, 'index.html', {
+        'ft_day':   Staff.objects.filter(employment_type='full_time', shift_preference='day').order_by('name'),
+        'ft_night': Staff.objects.filter(employment_type='full_time', shift_preference='night').order_by('name'),
+        'pt_day':   Staff.objects.filter(employment_type='part_time', shift_preference='day').order_by('name'),
+        'pt_night': Staff.objects.filter(employment_type='part_time', shift_preference='night').order_by('name'),
+    })
 
 def events_api(request):
     shift_type = request.GET.get('shift_type')
     staff_id = request.GET.get('staff_id')
+    employment_type = request.GET.get('employment_type')
+    shift_preference = request.GET.get('shift_preference')
 
     try:
         start = date.fromisoformat(request.GET.get('start', '').split('T')[0])
@@ -137,10 +143,19 @@ def events_api(request):
                 })
 
     else:
-        events = [
-            {
+        events = []
+        for shift in shifts:
+            staff_list = list(shift.staff.all())
+            if employment_type or shift_preference:
+                staff_list = [
+                    s for s in staff_list
+                    if (not employment_type or s.employment_type == employment_type)
+                    and (not shift_preference or s.shift_preference == shift_preference)
+                ]
+            count = len(staff_list)
+            events.append({
                 'id': shift.id,
-                'title': str(shift.staff.count()),
+                'title': str(count),
                 'start': shift.date.isoformat(),
                 'backgroundColor': hex_to_rgba(SHIFT_COLORS.get(shift.shift_type, '#A0621C')),
                 'borderColor': SHIFT_COLORS.get(shift.shift_type, '#A0621C'),
@@ -148,13 +163,11 @@ def events_api(request):
                 'order': SHIFT_ORDER.get(shift.shift_type, 9),
                 'extendedProps': {
                     'shift_type': shift.shift_type,
-                    'understaffed': shift.staff.count() < SHIFT_THRESHOLDS.get(shift.shift_type, 1),
-                    'overstaffed': shift.staff.count() > SHIFT_MAX.get(shift.shift_type, 99),
+                    'understaffed': count < SHIFT_THRESHOLDS.get(shift.shift_type, 1),
+                    'overstaffed': count > SHIFT_MAX.get(shift.shift_type, 99),
                     'summary': False,
                 },
-            }
-            for shift in shifts
-        ]
+            })
 
     return JsonResponse(events, safe=False)
 

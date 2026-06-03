@@ -1,12 +1,36 @@
 {% extends "base.html" %}
 {% block sidebar %}
-  <p class="sidebar-label">Staff</p>
   <ul class="staff-list">
     <li id="staff-all-btn">All</li>
-    {% for member in staff %}
-      <li data-staff-id="{{ member.id }}">{{ member.name }}</li>
-    {% endfor %}
   </ul>
+
+  {% if ft_day %}
+  <div class="staff-category" data-group="full_time" data-subgroup="day" style="background:rgba(200,146,42,0.55);border-color:#C8922A;">Full time &ndash; Day</div>
+  <ul class="staff-list staff-sublist">
+    {% for member in ft_day %}<li data-staff-id="{{ member.id }}" data-employment-type="full_time">{{ member.name }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if ft_night %}
+  <div class="staff-category" data-group="full_time" data-subgroup="night" style="background:rgba(62,35,20,0.55);border-color:#3E2314;">Full time &ndash; Night</div>
+  <ul class="staff-list staff-sublist">
+    {% for member in ft_night %}<li data-staff-id="{{ member.id }}" data-employment-type="full_time">{{ member.name }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if pt_day %}
+  <div class="staff-category" data-group="part_time" data-subgroup="day" style="background:rgba(160,98,28,0.55);border-color:#A0621C;">Part time &ndash; Day</div>
+  <ul class="staff-list staff-sublist">
+    {% for member in pt_day %}<li data-staff-id="{{ member.id }}" data-employment-type="part_time">{{ member.name }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if pt_night %}
+  <div class="staff-category" data-group="part_time" data-subgroup="night" style="background:rgba(62,35,20,0.55);border-color:#3E2314;">Part time &ndash; Night</div>
+  <ul class="staff-list staff-sublist">
+    {% for member in pt_night %}<li data-staff-id="{{ member.id }}" data-employment-type="part_time">{{ member.name }}</li>{% endfor %}
+  </ul>
+  {% endif %}
 {% endblock %}
 {% block main %}
   <div id="calendar"></div>
@@ -21,6 +45,9 @@
 <script>
 let activeFilter = null;
 let activeStaff = null;
+let activeGroup = null;
+let activeSubgroup = null;
+let activeStaffType = null;
 
 document.addEventListener('DOMContentLoaded', function () {
   const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
@@ -64,10 +91,13 @@ document.addEventListener('DOMContentLoaded', function () {
           const dateStr = info.event.startStr;
           const dayCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
           if (dayCell && !dayCell.querySelector('.summary-weekly')) {
+            const hours = info.event.extendedProps.hours;
+            const weeklyTarget = activeStaffType === 'part_time' ? 20 : 37.5;
+            const flagged = hours < weeklyTarget * 0.8 || hours > weeklyTarget * 1.2;
             const label = document.createElement('span');
             label.className = 'summary-weekly';
-            label.textContent = `Week: ${info.event.extendedProps.hours}h`;
-            label.style.cssText = 'display:flex;align-items:center;font-size:1rem;font-weight:600;color:rgba(100,100,100,0.85);line-height:1;pointer-events:none;margin-right:auto;padding-left:4px;';
+            label.textContent = `Week: ${hours}h`;
+            label.style.cssText = `display:flex;align-items:center;font-size:1rem;font-weight:600;color:${flagged ? 'rgba(179,51,51,0.9)' : 'rgba(100,100,100,0.85)'};line-height:1;pointer-events:none;margin-right:auto;padding-left:4px;`;
             const top = dayCell.querySelector('.fc-daygrid-day-top');
             if (top) top.appendChild(label);
           }
@@ -130,7 +160,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
       let url = `/events/?start=${start}&end=${end}`;
       if (activeFilter) url += '&shift_type=' + activeFilter;
-      if (activeStaff) url += '&staff_id=' + activeStaff;
+      if (activeStaff) {
+        url += '&staff_id=' + activeStaff;
+      } else if (activeGroup) {
+        url += '&employment_type=' + activeGroup;
+        if (activeSubgroup) url += '&shift_preference=' + activeSubgroup;
+      }
       fetch(url)
         .then(r => r.json())
         .then(data => {
@@ -164,11 +199,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   allBtn.addEventListener('click', function() {
     activeStaff = null;
-    document.querySelectorAll('.staff-list li').forEach(el => {
-      el.classList.remove('active');
-      el.style.removeProperty('background');
-      el.style.removeProperty('color');
-    });
+    activeStaffType = null;
+    activeGroup = null;
+    activeSubgroup = null;
+    clearAllActive();
     this.style.background = '#A0621C';
     this.style.color = '#FDF6EE';
     updateInfoBar(null);
@@ -180,26 +214,24 @@ document.addEventListener('DOMContentLoaded', function () {
       const staffId = this.dataset.staffId;
       if (activeStaff === staffId) {
         activeStaff = null;
-        this.classList.remove('active');
-        this.style.removeProperty('background');
-        this.style.removeProperty('color');
+        activeStaffType = null;
+        clearAllActive();
         allBtn.style.background = '#A0621C';
         allBtn.style.color = '#FDF6EE';
         updateInfoBar(null);
       } else {
-        document.querySelectorAll('.staff-list li').forEach(el => {
-          el.classList.remove('active');
-          el.style.removeProperty('background');
-          el.style.removeProperty('color');
-        });
         activeStaff = staffId;
-        this.classList.add('active');
+        activeStaffType = this.dataset.employmentType || null;
+        activeGroup = null;
+        activeSubgroup = null;
+        clearAllActive();
         this.style.background = '#A0621C';
         this.style.color = '#FDF6EE';
       }
       window._calendar.refetchEvents();
     });
   });
+
 
   const shiftLabels = {
     'fc-morningBtn-button':   ['Morning',   '06:00–14:00'],
@@ -211,6 +243,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btn) btn.innerHTML = `<span class="btn-name">${name}</span><span class="btn-time">${time}</span>`;
   });
 });
+
+function clearAllActive() {
+  document.querySelectorAll('#staff-all-btn, .staff-list li[data-staff-id]').forEach(el => {
+    el.style.removeProperty('background');
+    el.style.removeProperty('color');
+  });
+  document.querySelectorAll('.staff-category').forEach(el => el.classList.remove('active'));
+}
 
 function filterShifts(type) {
   activeFilter = activeFilter === type ? null : type;
@@ -228,7 +268,15 @@ function updateInfoBar(monthlyHours) {
   if (activeStaff) {
     const staffEl = document.querySelector(`.staff-list li[data-staff-id="${activeStaff}"]`);
     const name = staffEl ? staffEl.textContent.trim() : '';
-    bar.innerHTML = `<span style="font-weight:900;color:#4A2C17;font-family:inherit;">Staff: ${name}</span><span style="color:#7B4F3A;font-weight:600;font-family:inherit;">Total: ${monthlyHours != null ? monthlyHours + 'h' : ''}</span>`;
+    let hoursHtml = '';
+    if (monthlyHours != null) {
+      const monthlyTarget = activeStaffType === 'part_time' ? 87 : 160;
+      const flagged = monthlyHours < monthlyTarget * 0.8 || monthlyHours > monthlyTarget * 1.2;
+      const hoursColor = flagged ? '#b33' : '#7B4F3A';
+      const flag = flagged ? ' !' : '';
+      hoursHtml = `<span style="color:${hoursColor};font-weight:600;font-family:inherit;">Total: ${monthlyHours}h${flag}</span>`;
+    }
+    bar.innerHTML = `<span style="font-weight:900;color:#4A2C17;font-family:inherit;">Staff: ${name}</span>${hoursHtml}`;
   } else {
     bar.innerHTML = `
       <span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.82rem;font-weight:600;color:#7B4F3A;">

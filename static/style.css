@@ -196,6 +196,21 @@ header h1 {
   background: #EDD5BB;
 }
 
+.staff-category {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #3a3a3a;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  border-left: 3px solid;
+  margin-top: 0.55rem;
+}
+
+.staff-sublist {
+  padding-left: 0.4rem;
+  margin-top: 0.15rem;
+}
+
 .staff-list li.active,
 .staff-list li.active:hover,
 .staff-list li.active:focus,
