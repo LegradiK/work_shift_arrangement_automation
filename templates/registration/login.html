@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="login-container">
+  <h2 class="login-title">Admin Login</h2>
+  <form method="post" class="login-form">
+    {% csrf_token %}
+    <div class="login-field">
+      <label class="login-label">Username</label>
+      <input type="text" name="username" class="login-input" autofocus autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <input type="password" name="password" class="login-input" autocomplete="current-password">
+    </div>
+    {% if form.errors %}
+      <p class="login-error">Invalid username or password.</p>
+    {% endif %}
+    <button type="submit" class="login-submit">Login</button>
+  </form>
+</div>
+{% endblock %}

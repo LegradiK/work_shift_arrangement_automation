@@ -2,6 +2,7 @@
 {% block sidebar %}
   <p class="sidebar-label">Staff</p>
   <ul class="staff-list">
+    <li id="staff-all-btn">All</li>
     {% for member in staff %}
       <li data-staff-id="{{ member.id }}">{{ member.name }}</li>
     {% endfor %}
@@ -41,10 +42,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (summary) return false;
 
       const understaffed = info.event.extendedProps.understaffed;
+      const overstaffed = info.event.extendedProps.overstaffed;
       return {
         html: `<div class="custom-event">
           <div class="custom-event-left">
-            ${understaffed ? '<img src="/static/warning.png" class="event-warning-icon" alt="understaffed">' : ''}
+            ${understaffed ? '<img src="/static/warning.png" class="event-warning-icon" alt="understaffed">' : overstaffed ? '<img src="/static/warning-sign.png" class="event-overstaffed-icon" alt="overstaffed">' : ''}
           </div>
           <div class="custom-event-right">
             <span class="event-count">${info.event.title}</span>
@@ -100,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       const left = info.el.querySelector('.custom-event-left');
       if (left) {
-        left.style.cssText = 'display: flex; align-items: center; flex-shrink: 0; width: 0.85rem; height: 0.85rem;';
+        left.style.cssText = 'display: flex; align-items: center; justify-content: flex-start; flex-shrink: 0; width: 1.6rem;';
       }
     },
     eventWillUnmount: function(info) {  
@@ -156,7 +158,24 @@ document.addEventListener('DOMContentLoaded', function () {
   infoBar.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:1rem;padding:0.3rem 0.5rem;min-height:1.8rem;font-size:1.2rem;font-family:inherit;';
   if (toolbar) toolbar.insertAdjacentElement('afterend', infoBar);
 
-  document.querySelectorAll('.staff-list li').forEach(li => {
+  const allBtn = document.getElementById('staff-all-btn');
+  allBtn.style.background = '#A0621C';
+  allBtn.style.color = '#FDF6EE';
+
+  allBtn.addEventListener('click', function() {
+    activeStaff = null;
+    document.querySelectorAll('.staff-list li').forEach(el => {
+      el.classList.remove('active');
+      el.style.removeProperty('background');
+      el.style.removeProperty('color');
+    });
+    this.style.background = '#A0621C';
+    this.style.color = '#FDF6EE';
+    updateInfoBar(null);
+    window._calendar.refetchEvents();
+  });
+
+  document.querySelectorAll('.staff-list li[data-staff-id]').forEach(li => {
     li.addEventListener('click', function() {
       const staffId = this.dataset.staffId;
       if (activeStaff === staffId) {
@@ -164,6 +183,8 @@ document.addEventListener('DOMContentLoaded', function () {
         this.classList.remove('active');
         this.style.removeProperty('background');
         this.style.removeProperty('color');
+        allBtn.style.background = '#A0621C';
+        allBtn.style.color = '#FDF6EE';
         updateInfoBar(null);
       } else {
         document.querySelectorAll('.staff-list li').forEach(el => {
@@ -209,12 +230,20 @@ function updateInfoBar(monthlyHours) {
     const name = staffEl ? staffEl.textContent.trim() : '';
     bar.innerHTML = `<span style="font-weight:900;color:#4A2C17;font-family:inherit;">Staff: ${name}</span><span style="color:#7B4F3A;font-weight:600;font-family:inherit;">Total: ${monthlyHours != null ? monthlyHours + 'h' : ''}</span>`;
   } else {
-    bar.innerHTML = '';
+    bar.innerHTML = `
+      <span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.82rem;font-weight:600;color:#7B4F3A;">
+        <img src="/static/warning.png" style="height:0.7rem;width:auto;display:block;"> Understaffed
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.82rem;font-weight:600;color:#7B4F3A;">
+        <img src="/static/warning-sign.png" style="height:0.9rem;width:auto;display:block;"> Overstaffed
+      </span>
+    `;
   }
 }
 
 function closePopup() {
   document.getElementById('staff-popup').classList.add('hidden');
+  window._calendar.refetchEvents();
 }
 
 document.getElementById('staff-popup').addEventListener('click', function(e) {

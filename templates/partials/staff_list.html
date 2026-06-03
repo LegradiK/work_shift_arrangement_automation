@@ -1,8 +1,41 @@
 <h3 class="popup-title">{{ shift.get_shift_type_display }} &mdash; {{ shift.date }}</h3>
 <ul class="popup-staff-list">
   {% for member in shift.staff.all %}
-    <li>{{ member.name }}</li>
+    <li>
+      <span>{{ member.name }}</span>
+      {% if is_admin %}
+        <form method="post"
+              action="{% url 'shift_remove_staff' shift.id member.id %}"
+              hx-post="{% url 'shift_remove_staff' shift.id member.id %}"
+              hx-target="#staff-popup-content"
+              hx-swap="innerHTML"
+              style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="remove-staff-btn">&#x2715;</button>
+        </form>
+      {% endif %}
+    </li>
   {% empty %}
     <li class="empty">No staff assigned.</li>
   {% endfor %}
 </ul>
+{% if is_admin %}
+  <form method="post"
+        action="{% url 'shift_add_staff' shift.id %}"
+        hx-post="{% url 'shift_add_staff' shift.id %}"
+        hx-target="#staff-popup-content"
+        hx-swap="innerHTML"
+        class="add-staff-form">
+    {% csrf_token %}
+    <select name="staff_id" class="add-staff-select">
+      <option value="">Add staff member...</option>
+      {% for member in all_staff %}
+        {% if member not in shift.staff.all %}
+          <option value="{{ member.id }}">{{ member.name }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+    <button type="submit" class="add-staff-btn">Add</button>
+  </form>
+  <button onclick="closePopup()" class="confirm-btn">Confirm</button>
+{% endif %}

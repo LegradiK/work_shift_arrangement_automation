@@ -23,11 +23,16 @@ SHIFT_THRESHOLDS = {
     'afternoon': 4,
     'night':     3,
 }
+SHIFT_MAX = {
+    'morning':   6,
+    'afternoon': 6,
+    'night':     5,
+}
 SHIFT_TYPES = ['morning', 'afternoon', 'night']
 SHIFT_HOURS = {
-    'morning':   8,
-    'afternoon': 8,
-    'night':     8,
+    'morning':   7.5,
+    'afternoon': 7.5,
+    'night':     7.5,
 }
 
 def index(request):
@@ -144,6 +149,7 @@ def events_api(request):
                 'extendedProps': {
                     'shift_type': shift.shift_type,
                     'understaffed': shift.staff.count() < SHIFT_THRESHOLDS.get(shift.shift_type, 1),
+                    'overstaffed': shift.staff.count() > SHIFT_MAX.get(shift.shift_type, 99),
                     'summary': False,
                 },
             }
@@ -154,4 +160,29 @@ def events_api(request):
 
 def shift_staff(request, shift_id):
     shift = get_object_or_404(Shift.objects.prefetch_related('staff'), id=shift_id)
-    return render(request, 'partials/staff_list.html', {'shift': shift})
+    ctx = {'shift': shift, 'is_admin': request.user.is_authenticated}
+    if request.user.is_authenticated:
+        ctx['all_staff'] = Staff.objects.order_by('name')
+    return render(request, 'partials/staff_list.html', ctx)
+
+def shift_add_staff(request, shift_id):
+    if not request.user.is_authenticated:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden()
+    shift = get_object_or_404(Shift.objects.prefetch_related('staff'), id=shift_id)
+    staff_id = request.POST.get('staff_id')
+    if staff_id:
+        shift.staff.add(staff_id)
+    return render(request, 'partials/staff_list.html', {
+        'shift': shift, 'is_admin': True, 'all_staff': Staff.objects.order_by('name'),
+    })
+
+def shift_remove_staff(request, shift_id, staff_id):
+    if not request.user.is_authenticated:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden()
+    shift = get_object_or_404(Shift.objects.prefetch_related('staff'), id=shift_id)
+    shift.staff.remove(staff_id)
+    return render(request, 'partials/staff_list.html', {
+        'shift': shift, 'is_admin': True, 'all_staff': Staff.objects.order_by('name'),
+    })
