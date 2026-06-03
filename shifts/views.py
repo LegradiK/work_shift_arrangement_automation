@@ -3,14 +3,14 @@ from django.http import JsonResponse
 from .models import Shift, Staff
 from datetime import date, timedelta
 
-def hex_to_rgba(hex_color, alpha=0.35):
+def hex_to_rgba(hex_color, alpha=0.55):
     hex_color = hex_color.lstrip('#')
     r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
     return f'rgba({r},{g},{b},{alpha})'
 
 SHIFT_COLORS = {
     'morning':   '#C8922A',
-    'afternoon': '#7B4F3A',
+    'afternoon': '#A0621C',
     'night':     '#3E2314',
 }
 SHIFT_ORDER = {
@@ -85,8 +85,8 @@ def events_api(request):
                 'id': shift.id,
                 'title': shift.get_shift_type_display(),
                 'start': shift.date.isoformat(),
-                'backgroundColor': hex_to_rgba(SHIFT_COLORS.get(shift.shift_type, '#7B4F3A')),
-                'borderColor': SHIFT_COLORS.get(shift.shift_type, '#7B4F3A'),
+                'backgroundColor': hex_to_rgba(SHIFT_COLORS.get(shift.shift_type, '#A0621C')),
+                'borderColor': SHIFT_COLORS.get(shift.shift_type, '#A0621C'),
                 'textColor': '#3a3a3a',
                 'order': SHIFT_ORDER.get(shift.shift_type, 9),
                 'extendedProps': {
@@ -137,8 +137,8 @@ def events_api(request):
                 'id': shift.id,
                 'title': str(shift.staff.count()),
                 'start': shift.date.isoformat(),
-                'backgroundColor': hex_to_rgba(SHIFT_COLORS.get(shift.shift_type, '#7B4F3A')),
-                'borderColor': SHIFT_COLORS.get(shift.shift_type, '#7B4F3A'),
+                'backgroundColor': hex_to_rgba(SHIFT_COLORS.get(shift.shift_type, '#A0621C')),
+                'borderColor': SHIFT_COLORS.get(shift.shift_type, '#A0621C'),
                 'textColor': '#3a3a3a',
                 'order': SHIFT_ORDER.get(shift.shift_type, 9),
                 'extendedProps': {

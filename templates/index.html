@@ -58,14 +58,14 @@ document.addEventListener('DOMContentLoaded', function () {
       if (summary) {
         info.el.style.cssText = 'display: none;';
 
-        const dateStr = info.event.startStr;
-        const dayCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
-        if (dayCell) {
-          const existingLabel = dayCell.querySelector(`.summary-${summary}`);
-          if (!existingLabel) {
+        if (summary === 'weekly') {
+          const dateStr = info.event.startStr;
+          const dayCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+          if (dayCell && !dayCell.querySelector('.summary-weekly')) {
             const label = document.createElement('span');
-            label.className = `summary-${summary}`;
-            label.textContent = `${summary === 'weekly' ? 'Week: ' : 'Month: '}: ${info.event.extendedProps.hours}h`;
+            label.className = 'summary-weekly';
+            label.textContent = `Week: ${info.event.extendedProps.hours}h`;
+            label.style.cssText = 'display:flex;align-items:center;font-size:1rem;font-weight:600;color:rgba(100,100,100,0.85);line-height:1;pointer-events:none;margin-right:auto;padding-left:4px;';
             const top = dayCell.querySelector('.fc-daygrid-day-top');
             if (top) top.appendChild(label);
           }
@@ -131,7 +131,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (activeStaff) url += '&staff_id=' + activeStaff;
       fetch(url)
         .then(r => r.json())
-        .then(success)
+        .then(data => {
+          const monthly = data.find(e => e.extendedProps && e.extendedProps.summary === 'monthly');
+          updateInfoBar(monthly ? monthly.extendedProps.hours : null);
+          success(data);
+        })
         .catch(failure);
     },
     eventClick: function(info) {
@@ -146,6 +150,12 @@ document.addEventListener('DOMContentLoaded', function () {
   calendar.render();
   window._calendar = calendar;
 
+  const toolbar = document.querySelector('#calendar .fc-header-toolbar');
+  const infoBar = document.createElement('div');
+  infoBar.id = 'staff-info-bar';
+  infoBar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.3rem 0.5rem;min-height:1.8rem;font-size:1.2rem;font-family:inherit;';
+  if (toolbar) toolbar.insertAdjacentElement('afterend', infoBar);
+
   document.querySelectorAll('.staff-list li').forEach(li => {
     li.addEventListener('click', function() {
       const staffId = this.dataset.staffId;
@@ -154,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
         this.classList.remove('active');
         this.style.removeProperty('background');
         this.style.removeProperty('color');
+        updateInfoBar(null);
       } else {
         document.querySelectorAll('.staff-list li').forEach(el => {
           el.classList.remove('active');
@@ -162,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         activeStaff = staffId;
         this.classList.add('active');
-        this.style.background = '#7B4F3A';
+        this.style.background = '#A0621C';
         this.style.color = '#FDF6EE';
       }
       window._calendar.refetchEvents();
@@ -188,6 +199,18 @@ function filterShifts(type) {
     document.querySelector('.fc-' + activeFilter + 'Btn-button').classList.add('fc-btn-active');
   }
   window._calendar.refetchEvents();
+}
+
+function updateInfoBar(monthlyHours) {
+  const bar = document.getElementById('staff-info-bar');
+  if (!bar) return;
+  if (activeStaff) {
+    const staffEl = document.querySelector(`.staff-list li[data-staff-id="${activeStaff}"]`);
+    const name = staffEl ? staffEl.textContent.trim() : '';
+    bar.innerHTML = `<span style="font-weight:900;color:#4A2C17;font-family:inherit;">Staff: ${name}</span><span style="color:#7B4F3A;font-weight:600;font-family:inherit;">Total: ${monthlyHours != null ? monthlyHours + 'h' : ''}</span>`;
+  } else {
+    bar.innerHTML = '';
+  }
 }
 
 function closePopup() {
