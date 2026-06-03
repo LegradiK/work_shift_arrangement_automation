@@ -57,6 +57,16 @@ A Django-based web application for organising and visualising staff work shifts 
 
 ## Setup & Running
 
+Create a `data.env` file in the project root:
+
+```env
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+```
+
+> `data.env` is listed in `.gitignore` and should never be committed.
+
 ```bash
 # Create and activate virtual environment
 python -m venv venv
